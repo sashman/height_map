@@ -1,0 +1,131 @@
+import re, math
+from heapq import heappush, heappop
+
+def get_path(map):
+	
+	size = len(map)
+	#out_map = range(0, size)
+	#for m in range(0, size):
+	#	map[m] = range(0,size)
+	#	for n in range(0, size):
+	#		map[m][n] = range(0, size)
+	src = "0,0"
+	dest = str(int(size/2-1)) + "," + str(int(size/2-1))
+
+	closedset = set()
+	openset = []
+	came_from = {}
+	
+	g_score = {}
+	h_score = {}
+	f_score = {}
+
+	for i in range(0, size):
+		for j in range(0, size):
+			k = str(i) + "," + str(j)
+			g_score[k] = 0 #g_score_est(0, src, map) 
+			h_score[k] = h_cost_est(k,dest, map)
+			f_score[k] = g_score[k] + h_score[k]
+	
+	g_score[src] = 0 #g_score_est(src)
+	h_score[src] = h_cost_est(src, dest, map)
+	f_score[src] = g_score[src] + h_score[src]
+	heappush(openset, (f_score[src], src))
+
+	while len(openset)>0:
+
+		_, x = heappop(openset)
+		#print "Looking at " + str(x) + " g=" + str(g_score[x]) + " h=" + str(h_score[x])
+		#print f_score[x]
+		if x == dest:
+			return reconstruct_path(came_from, came_from[dest])
+	
+		closedset.add(x)
+		for y in neighbors(x, size):
+			if y in closedset:
+				continue
+			
+			tenative_g_score = g_score[x] #dist_between(x,y)
+			g_score[y] = g_score_est(g_score[x], x, map)
+			f_score[y] = g_score[y] + h_score[y]
+
+			if (f_score[y], y) not in openset:
+				heappush(openset, (f_score[y], y))
+				tenative = True
+			elif tenative_g_score < g_score[y]:
+				tenative = True
+			else:
+				tenative = False
+
+			if tenative:
+				#print "adding " + str(y)
+				came_from[y] = x
+				g_score[y] = tenative_g_score
+				h_score[y] = h_cost_est(y,dest, map)
+				f_score[y] = g_score[y] + h_score[y]
+		#print came_from
+	return False
+
+def reconstruct_path(came_from, curr):
+	print curr
+	if curr in came_from:
+		p = reconstruct_path(came_from, came_from[curr])
+		p.append(curr)
+		return p
+	else:
+		return [curr]
+
+
+def g_score_est(n, s, map):
+	x = 0
+	y = 0
+	m = re.match("(\d+)\,(\d+)",str(s))
+	if not m: print "NO MATCH"
+	else:
+		x = int(m.group(1))
+		y = int(m.group(2))
+	if map[x][y] < 0: map[x][y] = 0
+	return int(n) + 1 + int((map[x][y])*5)
+
+def h_cost_est(s, g, map):
+	x = 0
+	y = 0
+	m = re.match("(\d+)\,(\d+)",str(s))
+	if not m: print "NO MATCH"
+	else:
+		x = int(m.group(1))
+		y = int(m.group(2))
+	x1 = 0
+	y1 = 0
+	m = re.match("(\d+)\,(\d+)",str(g))
+	if not m: print "NO MATCH"
+	else:
+		x1 = int(m.group(1))
+		y1 = int(m.group(2))
+
+	return abs(x-x1) + abs(y-y1) #math.sqrt(math.pow(abs(x-x1),2) + math.pow(abs(y-y1),2))
+
+
+def neighbors(n, size):
+	out = []
+	x = 0
+	y = 0
+	m = re.match("(\d+)\,(\d+)",str(n))
+	if not m: print "NO MATCH"
+	else:
+		x = int(m.group(1))
+		y = int(m.group(2))
+	#north
+	n = y -1
+	if n >= 0: out.append(str(x) + "," + str(n))
+	#south
+	s = y +1
+	if s < size: out.append(str(x) + "," + str(s))
+	#west
+	w = x -1
+	if w >= 0: out.append(str(w) + "," + str(y))
+	#east
+	e = x +1
+	if e < size: out.append(str(e) + "," + str(y))
+	return out
+

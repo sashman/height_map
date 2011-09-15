@@ -53,7 +53,7 @@ def run():
 	if len(sys.argv)>1:
 		random.seed(sys.argv[1])
 
-	seed = 10
+	seed = 5
 	random_offset = 10
 	l = 0     
 	h = len(map)-1 #sub size
